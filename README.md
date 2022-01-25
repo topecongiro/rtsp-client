@@ -1,0 +1,1 @@
+A quick and dirty RTSP 1.0 client.
