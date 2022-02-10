@@ -5,6 +5,7 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use bytes::Bytes;
+use log::trace;
 use thiserror::Error;
 use tokio::io::ReadBuf;
 use tokio::net::UdpSocket;
@@ -37,7 +38,7 @@ impl tokio_stream::Stream for RtpStream {
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut buf: [MaybeUninit<u8>; 1500] = MaybeUninit::uninit_array();
         let mut buf = ReadBuf::uninit(&mut buf);
-        println!("start polling");
+        trace!("start polling");
         match self.socket.poll_recv(cx, &mut buf) {
             Poll::Pending => Poll::Pending,
             Poll::Ready(Ok(_)) =>  {

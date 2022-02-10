@@ -1,7 +1,8 @@
 [package]
-name = "rtsp-client"
+name = "rtsp_client"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -9,10 +10,12 @@ edition = "2021"
 anyhow = "1"
 bytes = "1.1.0"
 clap = { version = "3", features = ["derive"] }
-tokio = { version = "1.15", features = ["full"] }
-tokio-stream = "0.1.8"
-url = "2"
+env_logger = "0.9.0"
+log = "0.4.14"
 http-auth = "0.1.5"
 rand = "0.8.4"
 sdp-types = "0.1.3"
 thiserror = "1"
+tokio = { version = "1.15", features = ["full"] }
+tokio-stream = "0.1.8"
+url = "2"

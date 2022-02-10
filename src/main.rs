@@ -2,10 +2,12 @@
 
 use std::time::Duration;
 use clap::Parser;
+use log::{LevelFilter, trace};
 use tokio::select;
 use tokio::io::AsyncReadExt;
 use tokio::time::interval;
 use tokio_stream::StreamExt;
+use url::Url;
 
 use crate::rtsp::{Config, RtspClient};
 
@@ -20,35 +22,38 @@ struct Args {
     #[clap(short, long)]
     password: String,
 
+    #[clap(short, long)]
+    verbose: bool,
+
     url: String,
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let args: Args = Args::parse();
-    let config = Config::new(&args.url, &args.username, &args.password, 1024)?;
 
-    let mut client = RtspClient::new(config).await?;
-    let resp = client.describe().await?;
-    if let Some(video_media) = resp.session().medias.iter().find(|m| m.media == "video") {
-        if let Some(control_attr) = video_media.attributes.iter().find(|attr| attr.attribute == "control") {
-            let track_id = control_attr.value.as_ref().map_or("", String::as_str);
-            println!("track ID for video is {}", track_id);
-        }
+    if args.verbose {
+        env_logger::builder()
+            .filter_module(env!("CARGO_PKG_NAME"), LevelFilter::Trace)
+            .try_init();
+    } else {
+        env_logger::init();
     }
 
-    println!("{:#?}", resp);
-    let resp = client.setup().await?;
-    println!("{:#?}", resp);
-    let (resp, mut stream) = client.play(resp.session_id()).await?;
-    println!("{:#?}", resp);
+    let url = Url::parse(&args.url)?;
+    let config = Config::new(args.username, args.password, 1024)?;
+    trace!("url: {}", url);
+    let mut client = RtspClient::new(config).await?;
+
+    let video_stream = client.connect(url).await?;
 
     let mut buf = vec![0u8; 1500];
     let mut buf2 = vec![0u8; 1500];
     let mut interval = interval(Duration::from_secs(5));
+    /*
     loop {
         select! {
-            rtsp_data = client.stream.read(&mut buf2) => {
+            rtsp_data = video_stream.read(&mut buf2) => {
                 println!("received RTSP data\n{}", String::from_utf8_lossy(&buf2));
             }
             rtp_packet = stream.next() => {
@@ -70,6 +75,7 @@ async fn main() -> anyhow::Result<()> {
             }
         }
     }
+     */
 
     Ok(())
 }
